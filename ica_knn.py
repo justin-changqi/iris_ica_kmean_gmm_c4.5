@@ -52,10 +52,44 @@ class IrisICA:
             data_iris[:-1] = ica_data
         # print (self.irisdata)
 
+    def getSortedComponentEnergy(self):
+        energies = []
+        num_conponent = len(self.irisdata[0])-1
+        for data in self.irisdata:
+            for i in range(num_conponent):
+                if len(energies) < num_conponent:
+                    energies.append(math.pow(data[i], 2))
+                else:
+                    energies[i] += math.pow(data[i], 2)
+        sorted_engergy_index = sorted(range(len(energies)), \
+                                      key=lambda x:energies[x], reverse=True)
+        print (sorted_engergy_index)
+        print (energies)
+        return sorted_engergy_index
+
+    def getTrainTestSet(self, components_index, train_size=0.7):
+        random.shuffle(self.irisdata)
+        num_train = int(len(self.irisdata) * train_size)
+        for i in range(len(self.irisdata)):
+            data_point = []
+            for index in components_index:
+                data_point.append(self.irisdata[i][index])
+            data_point.append(self.irisdata[i][-1])
+            if (i <= num_train):
+                self.train_data.append(data_point)
+            else:
+                self.test_data.append(data_point)
+        return self.train_data, self.test_data
+
+
 if __name__ == "__main__":
     np.set_printoptions(precision=3)
     iris_data = IrisICA('iris_data_set/iris.data')
     iris_data.plotIrisData('iris data before ica')
     iris_data.applyIcaFromFullIris(number_components=4)
+    energy_of_components = iris_data.getSortedComponentEnergy()
+    train_data, test_data = iris_data.getTrainTestSet(energy_of_components[:2], train_size=0.7)
     iris_data.plotIrisData('iris data after ica')
+    knn = Knn()
+    print (knn.kNearestNeighbors(train_data, test_data))
     plt.show()
