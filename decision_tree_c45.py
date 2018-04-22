@@ -3,6 +3,8 @@ import numpy as np
 import math
 from anytree import Node, RenderTree
 
+# data source:  https://cis.temple.edu/~giorgio/cis587/readings/id3-c45.html
+
 # outlook:
 #     0: sunny
 #     1: overcast
@@ -19,19 +21,12 @@ from anytree import Node, RenderTree
 # play:
 #     0: don't play
 #     1: play
+
 class Node:
-    def __init__(self, data_indexes):
-        self.child = []
-        self.feature = []
-        self.avalible_features = []
-        self.data_field = data_indexes
-        pass
-
-
-class Tree:
-    def __init__(self, root_feature, root_indexes, feature_map):
-        self.root = Node()
-        pass
+    def __init__(self, isLeaf, feature):
+        self.feature = feature
+        self.isLeaf = isLeaf
+        self.children = []
 
 class C45:
     def __init__(self, file_name):
@@ -44,14 +39,14 @@ class C45:
         self.feature_list = {'outlook': 0, 'tempeature':1, 'humidity':2, 'windy':3}
         self.train = np.array(df.astype(float).values.tolist())
         self.En_T = self.entropy(self.train.T[4])
-        # print (self.train)
         self.partitionData(self.getBestThreshold(self.train.T[2]), 2)
         self.partitionData(self.getBestThreshold(self.train.T[1]), 1)
         # print (self.train)
         root_indexes = list(range(len(self.train)))
-        root_feature = self.getMaxGainRate(self.feature_list, root_indexes)
-        self.tree = Tree(maxGain(), )
-        # print ()
+        # root_feature = self.getMaxGainRate(self.feature_list, root_indexes)
+        self.tree = self.generateTree(self.feature_list, root_indexes)
+        self.printTree(self.tree)
+        # print (self.slitIndexes('outlook', root_indexes))
 
     def getBestThreshold(self, data):
         # 1. Sort data
@@ -122,7 +117,7 @@ class C45:
                 self.train[i][index] = 1
 
     def getMaxGainRate(self, features, indexes):
-        max_gain = {'feature': '', 'gain': 0}
+        max_gain = {'feature': '', 'gain': -1}
         for key in features:
             data_vector = []
             for i in indexes:
@@ -130,7 +125,10 @@ class C45:
             data_array = np.array(data_vector)
             gain = self.En_T - self.entropy(data_array, self.train.T[-1])
             split_gain = self.entropy(data_array)
-            gain_rate =  gain/split_gain
+            if split_gain == 0:
+                gain_rate = 0
+            else:
+                gain_rate =  gain/split_gain
             if (max_gain['gain'] < gain_rate):
                 max_gain['gain'] = gain_rate
                 max_gain['feature'] = key
@@ -151,6 +149,62 @@ class C45:
         # print (slit_p / len(data_array))
         return (slit_p / len(data_array))
 
+    def generateTree(self, feature_list, indexes):
+        all_same = self.allSameResult(indexes)
+        new_feature_list = feature_list
+        if len(indexes) == 0:
+            # print ('indexes = 0')
+            return Node(True, None)
+        elif (all_same is not False):
+            # print ('all same')
+            return Node(True, all_same)
+        elif (len(feature_list) == 0):
+            # print ('no feature_list')
+            return Node(True, self.getMaxGainRate(feature_list, indexes))
+        else:
+            best = self.getMaxGainRate(feature_list, indexes)
+            # print ('recursive: ', best)
+            node = Node(False, best)
+            slit_item = self.slitIndexes(best, indexes)
+            del new_feature_list[best]
+            for slit_indexes in slit_item:
+                # print (slit_indexes)
+                node.children.append(self.generateTree(new_feature_list, slit_indexes))
+            return node
+
+    def allSameResult(self, indexes):
+        if (len(indexes) == 0):
+            return False
+        else:
+            item = self.train.T[-1][indexes[0]]
+            for index in indexes:
+                if (self.train.T[-1][index] != item):
+                    return False
+            return item
+
+    def slitIndexes(self, feature, indexes):
+        # slit_indexes = {}
+        slit_indexes = []
+        feature_index = self.feature_list[feature]
+        for key in self.feature_map[feature]:
+            index = []
+            for i in indexes:
+                if (self.feature_map[feature][key] == self.train.T[feature_index][i]):
+                    index.append(i)
+            # slit_indexes.update({key:index})
+            slit_indexes.append(index)
+        return slit_indexes
+
+    def printTree(self, tree):
+        self.printNode(tree)
+
+    def printNode(self, node, indent=''):
+        if not node.isLeaf:
+            print (indent, node.feature, ': ')
+            for children in node.children:
+                self.printNode(children, '    ')
+        else:
+            pass
 
 if __name__ == '__main__':
     c45 = C45('playgolf.csv')
