@@ -222,13 +222,16 @@ class C45:
 
     def plotNode(self, dot, node, parent_id = None, edge_label=None):
         if not node.isLeaf:
+            if node.threshold == None:
                 dot.node('node_'+str(self.unique_id), node.feature)
-                if parent_id != None:
-                    dot.edge(parent_id, 'node_'+str(self.unique_id), edge_label)
-                parent_id = 'node_'+str(self.unique_id)
-                self.unique_id += 1
-                for key in node.children:
-                    self.plotNode(dot, node.children[key], parent_id, key)
+            else:
+                dot.node('node_'+str(self.unique_id), node.feature+'\n'+'H0='+str(node.threshold))
+            if parent_id != None:
+                dot.edge(parent_id, 'node_'+str(self.unique_id), edge_label)
+            parent_id = 'node_'+str(self.unique_id)
+            self.unique_id += 1
+            for key in node.children:
+                self.plotNode(dot, node.children[key], parent_id, key)
         else:
             if (node.feature == 1):
                 dot.node('node_'+str(self.unique_id), 'Play')
