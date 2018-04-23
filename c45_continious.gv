@@ -1,0 +1,27 @@
+// C4.5 Tree
+digraph {
+	node_0 [label="humidity
+H0=[80, 95]"]
+	node_1 [label=windy]
+	node_0 -> node_1 [label=low]
+	node_2 [label=outlook]
+	node_1 -> node_2 [label=true]
+	node_3 [label="Don't Play"]
+	node_2 -> node_3 [label=rain]
+	node_4 [label=Play]
+	node_2 -> node_4 [label=overcast]
+	node_5 [label=Play]
+	node_2 -> node_5 [label=sunny]
+	node_6 [label=Play]
+	node_1 -> node_6 [label=false]
+	node_7 [label=Play]
+	node_0 -> node_7 [label=high]
+	node_8 [label=outlook]
+	node_0 -> node_8 [label=mid]
+	node_9 [label="Don't Play"]
+	node_8 -> node_9 [label=rain]
+	node_10 [label=Play]
+	node_8 -> node_10 [label=overcast]
+	node_11 [label="Don't Play"]
+	node_8 -> node_11 [label=sunny]
+}
