@@ -30,7 +30,7 @@ class C45:
         discrete_data, self.th_values = self.DiscreteData(df)
         # print (discrete_data, self.th_values)
         self.tree = self.generateTree(discrete_data)
-        self.printTree(self.tree)
+        # self.printTree(self.tree)
         self.plotTree(self.tree, 'c45_continious.gv')
 
     def entropy(self, data_a, data_b=None):
@@ -230,11 +230,13 @@ class C45:
         else:
             if (node.feature == 1):
                 dot.node('node_'+str(self.unique_id), 'Play')
-            else:
+            elif (node.feature == 0):
                 dot.node('node_'+str(self.unique_id), 'Don\'t Play')
+            else:
+                dot.node('node_'+str(self.unique_id), 'None')
             dot.edge(parent_id, 'node_'+str(self.unique_id), edge_label)
             self.unique_id += 1
-        print(dot.source)
+        # print(dot.source)
 
 if __name__ == '__main__':
     c45 = C45('playgolf.csv')
