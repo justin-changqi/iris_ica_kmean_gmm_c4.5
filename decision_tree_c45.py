@@ -40,7 +40,9 @@ class C45:
                             'play':{'nplay':0, 'paly':1}}
         self.result_key = 'play'
         self.continuous_data_key = ['temperature', 'humidity']
-        self.tree = self.generateTree(df)
+        # partition data
+        discrete_data, self.th_values = self.DiscreteData(df)
+        self.tree = self.generateTree(discrete_data)
         self.printTree(self.tree)
 
     def entropy(self, data_a, data_b=None):
@@ -179,17 +181,15 @@ class C45:
             # print ('all same: ', all_same)
             return Node(True, all_same)
         else:
-            # partition data
-            discrete_data, th_values = self.DiscreteData(data)
             # find max gain item and slit
-            maxgain_key = self.getMaxGainRate(discrete_data)
+            maxgain_key = self.getMaxGainRate(data)
             # create node for each class
             node = Node(False, maxgain_key)
             print ('--------', maxgain_key, '--------')
             print (data)
-            print (th_values)
-            if(maxgain_key in th_values):
-                node.threshold = th_values[maxgain_key]
+            print (self.th_values)
+            if(maxgain_key in self.th_values):
+                node.threshold = self.th_values[maxgain_key]
             slit_item = self.slitData(maxgain_key, data)
             for key in slit_item:
                 # print ('child ', key,': ', slit_item[key])
