@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import math
-from anytree import Node, RenderTree
+from graphviz import Digraph
 
 # data source:  https://cis.temple.edu/~giorgio/cis587/readings/id3-c45.html
 
@@ -44,6 +44,7 @@ class C45:
         discrete_data, self.th_values = self.DiscreteData(df)
         self.tree = self.generateTree(discrete_data)
         self.printTree(self.tree)
+        self.plotTree(self.tree)
 
     def entropy(self, data_a, data_b=None):
         if (data_b is None):
@@ -185,9 +186,9 @@ class C45:
             maxgain_key = self.getMaxGainRate(data)
             # create node for each class
             node = Node(False, maxgain_key)
-            print ('--------', maxgain_key, '--------')
-            print (data)
-            print (self.th_values)
+            # print ('--------', maxgain_key, '--------')
+            # print (data)
+            # print (self.th_values)
             if(maxgain_key in self.th_values):
                 node.threshold = self.th_values[maxgain_key]
             slit_item = self.slitData(maxgain_key, data)
@@ -201,15 +202,41 @@ class C45:
 
     def printNode(self, node, indent=''):
         if not node.isLeaf:
-            print (indent, node.feature)
+            print (indent, node.feature,  end=' ')
             if node.threshold != None:
-                print (indent, node.threshold, ': ')
+                print (node.threshold, ': ')
+            else:
+                print (': ')
             for key in node.children:
-                print (indent+'   ', key)
+                print (indent+'    ', key)
                 self.printNode(node.children[key], indent+'    ')
         else:
             print (indent, '    ',  node.feature)
             pass
+
+    def plotTree(self, tree):
+        dot = Digraph(comment='C4.5 Tree')
+        self.unique_id = 0
+        self.plotNode(dot, tree)
+        dot.render('c45_tree.gv', view=True)
+
+    def plotNode(self, dot, node, parent_id = None, edge_label=None):
+        if not node.isLeaf:
+                dot.node('node_'+str(self.unique_id), node.feature)
+                if parent_id != None:
+                    dot.edge(parent_id, 'node_'+str(self.unique_id), edge_label)
+                parent_id = 'node_'+str(self.unique_id)
+                self.unique_id += 1
+                for key in node.children:
+                    self.plotNode(dot, node.children[key], parent_id, key)
+        else:
+            if (node.feature == 1):
+                dot.node('node_'+str(self.unique_id), 'Play')
+            else:
+                dot.node('node_'+str(self.unique_id), 'Don\'t Play')
+            dot.edge(parent_id, 'node_'+str(self.unique_id), edge_label)
+            self.unique_id += 1
+        print(dot.source)
 
 if __name__ == '__main__':
     c45 = C45('playgolf.csv')
