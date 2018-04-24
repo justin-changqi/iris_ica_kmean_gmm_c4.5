@@ -5,7 +5,8 @@ import math
 class IrisKMeans:
     def __init__(self, file_name):
         df = pd.read_csv(file_name)
-        df['class'] = df['class'].apply(lambda x: 0 if x == 'Iris-setosa' else (1 if x == 'Iris-versicolor' else 2))
+        df['class'] = df['class'].apply(lambda x: 0 if x == 'Iris-setosa' \
+                                                    else (1 if x == 'Iris-versicolor' else 2))
         self.irisdata = df.astype(float).values.tolist()
         self.clusters = {}
         self.number_of_features = len(self.irisdata[0]) - 1
@@ -92,12 +93,37 @@ class IrisKMeans:
             distance += math.pow(v1-v2, 2)
         return math.sqrt(distance)
 
+    def getAccuracy(self, cluster):
+        cluster_list = {}
+        indexis = self.clusters[cluster]['cluster_indexes']
+        for index in indexis:
+            key = self.irisdata[index][-1]
+            if key in cluster_list:
+                cluster_list[key] += 1.
+            else:
+                cluster_list.update({int(key):1.})
+        # get main key
+        max_item = {'key':None, 'amount':-1}
+        for key in cluster_list:
+            if cluster_list[key] > max_item['amount']:
+                 max_item['amount'] = cluster_list[key]
+                 max_item['key'] = key
+        num_wrong = 0
+        for key in cluster_list:
+            if key !=  max_item['key']:
+                num_wrong += cluster_list[key]
+        # print (cluster_list,  max_item['key'], int(num_wrong) )
+        return  cluster_list, int(num_wrong)
+
 if __name__ == "__main__":
     np.set_printoptions(precision=3)
     iris_kmean = IrisKMeans('iris_data_set/iris.data')
     init_index = iris_kmean.getFirstSampleIndex()
     iris_kmean.kMeansClustering(init_index, k=3)
     for key in iris_kmean.clusters:
-        print ('cluster ', key, ': ', np.array(iris_kmean.clusters[key]['mean']))
-    print ()
-    pass
+        print ('cluster', key, ':')
+        print ('\t(a) Cluster Center -->',np.array(iris_kmean.clusters[key]['mean']))
+        print ('\t(b) Number of member in cluster -->',len(iris_kmean.clusters[key]['cluster_indexes']))
+        cluster_list, num_wrong = iris_kmean.getAccuracy(key)
+        print ('\t(c) Statistic -->', cluster_list)
+        print ('\t    Number of Wrong -->', num_wrong)
