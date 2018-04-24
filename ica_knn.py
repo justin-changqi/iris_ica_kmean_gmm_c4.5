@@ -11,7 +11,8 @@ from knn import Knn
 class IrisICA:
     def __init__(self, file_name):
         df = pd.read_csv(file_name)
-        df['class'] = df['class'].apply(lambda x: 0 if x == 'Iris-setosa' else (1 if x == 'Iris-versicolor' else 2))
+        df['class'] = df['class'].apply(lambda x: 0 if x == 'Iris-setosa' \
+                                                    else (1 if x == 'Iris-versicolor' else 2))
         self.irisdata = df.astype(float).values.tolist()
         self.train_data = []
         self.test_data = []
@@ -45,12 +46,12 @@ class IrisICA:
         for data in self.irisdata:
             ica_input.append(data[:-1])
         # print (np.array(ica_input))
-        ica = FastICA(n_components=number_components)
+        ica = FastICA(n_components=number_components, whiten=False)
         ica_out = ica.fit_transform(ica_input)
         # replace original data
         for data_iris, ica_data in zip(self.irisdata, ica_out):
             data_iris[:-1] = ica_data
-        # print (self.irisdata)
+        # print (np.array(self.irisdata))
 
     def getSortedComponentEnergy(self):
         energies = []
@@ -63,8 +64,8 @@ class IrisICA:
                     energies[i] += math.pow(data[i], 2)
         sorted_engergy_index = sorted(range(len(energies)), \
                                       key=lambda x:energies[x], reverse=True)
-        print (sorted_engergy_index)
-        print (energies)
+        # print (sorted_engergy_index)
+        # print (energies)
         return sorted_engergy_index
 
     def getTrainTestSet(self, components_index, train_size=0.7):
@@ -81,9 +82,7 @@ class IrisICA:
                 self.test_data.append(data_point)
         return self.train_data, self.test_data
 
-
-if __name__ == "__main__":
-    np.set_printoptions(precision=3)
+def icaKnnTest():
     iris_data = IrisICA('iris_data_set/iris.data')
     iris_data.plotIrisData('iris data before ica')
     iris_data.applyIcaFromFullIris(number_components=4)
@@ -93,3 +92,20 @@ if __name__ == "__main__":
     knn = Knn()
     print (knn.kNearestNeighbors(train_data, test_data))
     plt.show()
+
+def icaKnnLoop(loop=10):
+    accuracy = 0
+    for i in range(loop):
+        iris_data = IrisICA('iris_data_set/iris.data')
+        iris_data.applyIcaFromFullIris(number_components=4)
+        energy_of_components = iris_data.getSortedComponentEnergy()
+        train_data, test_data = iris_data.getTrainTestSet(energy_of_components[:2], train_size=0.7)
+        knn = Knn()
+        current_accuracy = knn.kNearestNeighbors(train_data, test_data)
+        accuracy += current_accuracy
+        print ('round ', i+1, ' accuracy: ', current_accuracy)
+    return accuracy / loop
+
+if __name__ == "__main__":
+    np.set_printoptions(precision=3)
+    print ('Average accuracy: ', icaKnnLoop(loop=10))
